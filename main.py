@@ -1,7 +1,3 @@
-
-
-#https://www.youtube.com/watch?v=wylMwU1wEOM
-#fck life
 import math
 from board import Board
 
@@ -14,10 +10,14 @@ class Node:
     def __init__(self,parent,board,player):
         self.board = board
         self.parent = parent
+
         self.player = player
         self.score = 0
         self.childs = []
+        self.moves = []
         self.best_child = None
+        self.best_move = None
+        
 
     def find_childs(self):
         #finds all possible childs
@@ -33,8 +33,9 @@ class Node:
                         nplayer = 1
                     child = Node(self,Board(nboard),nplayer)
                     self.childs.append(child)
+                    self.moves.append([r,c])
         
-        return self.childs
+        return self.childs,self.moves
 
 class MinMax:
     #initiate root node
@@ -43,56 +44,69 @@ class MinMax:
         self.root = root
        # self.maxDepth = maxDepth
 
-    def config(self,root):
-        self.root = root
-
     def max_move(self,node,depth=0):
         winner = node.board.isTerminal()
         if(winner != 0):     
             if(self.root.player == winner):
-                node.score = 1 - (depth/1000)
+                node.score = 1  
             elif(winner == 3):
-                node.score = 0 - (depth/1000)
+                node.score = 0 
             else:
-                node.score = -1 - (depth/1000)
+                node.score = -1 
         else:
-            childs = node.find_childs()
-            max = -math.inf
-            C = None
-            for child in childs:
+            childs,moves = node.find_childs()
+            max_score = -math.inf
+            bc_depth = math.inf
+            best_child = None
+            best_move = None
+            for child,move in zip(childs,moves):
                 self.min_move(child,depth+1)
-                if(child.score > max):
-                    max = child.score
-                    C = child
+                if(child.score > max_score):
+                    max_score = child.score
+                    best_child = child
+                    best_move = move
+            node.score = max_score
+            node.best_child = best_child
+            node.best_move = best_move
 
-            node.score = max
-            node.best_child = C
-            
-          
+    def get_state(self,state):
+        stack = []
+        stack.append(root_node)
+        while(len(stack) > 0):
+            node = stack.pop()
+            for child in node.childs: 
+                if(child.board.state == state):
+                    return child
+                stack.append(child)
 
     def min_move(self,node,depth=0):
         winner = node.board.isTerminal()
         if(winner != 0):     
             if(winner == self.root.player):
-                node.score = 1 - (depth/1000)
+                node.score = 1 
             elif(winner == 3):
-                node.score = 0 - (depth/1000)
+                node.score = 0 
             else:
-                node.score = -1 - (depth/1000)
+                node.score = -1 
         else:
-            childs = node.find_childs()
-            min = math.inf
-            C = None
-            for child in childs:
+            childs,moves = node.find_childs()
+            min_score = math.inf
+            bc_depth = -math.inf
+            best_child = None
+            best_move = None
+            for child,move in zip(childs,moves):
                 self.max_move(child,depth+1)
-                if(child.score < min):
-                    min = child.score
-                    C = child
-            node.score = min
-            node.best_child = C
-        
+                if(child.score <= min_score):
+                   min_score = child.score
+                   best_child = child
+                   best_move = move
+                
+            node.score = min_score
+            node.best_child = best_child
+            node.best_move = best_move
 
-       
+    
+
           
 if __name__ == "__main__":
     #Player 1 starts first
@@ -103,28 +117,23 @@ if __name__ == "__main__":
     node = root_node
     minmax = MinMax(root_node)
     minmax.max_move(node)
+    print("Computer Move: "+str(node.best_move[0])+","+str(node.best_move[1]))
     node.best_child.board.show()
     node = node.best_child
+    
 
     while(node.board.isTerminal() == 0):
         try:
-            move = input("Enter move (r,c): ").split(",")
-            node.board.state = node.board.move(int(move[0]), int(move[1]), 2)
+            move = input("Enter move (row,col): ").split(",")
+            state = node.board.move(int(move[0]), int(move[1]), 2)
         except:
             continue
-
+        
+        node = minmax.get_state(state)
         node.board.show()
         
-
-        node = Node(None,node.board,1)
-        minmax = MinMax(node)
-        minmax.max_move(node)
+        print("Computer Move: "+str(node.best_move[0])+","+str(node.best_move[1]))
         node.best_child.board.show()
-        node = node.best_child
         
-     #   minmax.min_move(node)
-     #   node.best_child.board.show()
-
-      #  node = node.best_child
-
-    #root_node.best_child.best_child.board.show()
+        node = node.best_child
+    
