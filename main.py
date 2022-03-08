@@ -37,14 +37,14 @@ class Node:
         
         return self.childs,self.moves
 
-class MinMax:
+class MiniMax:
     #initiate root node
     def __init__(self,root):
         #initalize root state, depth of search
         self.root = root
        # self.maxDepth = maxDepth
 
-    def max_move(self,node,depth=0):
+    def maximizer(self,node,depth=0):
         winner = node.board.isTerminal()
         if(winner != 0):     
             if(self.root.player == winner):
@@ -60,9 +60,9 @@ class MinMax:
             best_child = None
             best_move = None
             for child,move in zip(childs,moves):
-                self.min_move(child,depth+1)
+                self.minimizer(child,depth+1)
                 if(child.score > max_score):
-                    max_score = child.score
+                    max_score = child.score - (depth/1000)
                     best_child = child
                     best_move = move
             node.score = max_score
@@ -79,7 +79,7 @@ class MinMax:
                     return child
                 stack.append(child)
 
-    def min_move(self,node,depth=0):
+    def minimizer(self,node,depth=0):
         winner = node.board.isTerminal()
         if(winner != 0):     
             if(winner == self.root.player):
@@ -95,9 +95,9 @@ class MinMax:
             best_child = None
             best_move = None
             for child,move in zip(childs,moves):
-                self.max_move(child,depth+1)
+                self.maximizer(child,depth+1)
                 if(child.score <= min_score):
-                   min_score = child.score
+                   min_score = child.score - (depth/1000)
                    best_child = child
                    best_move = move
                 
@@ -115,8 +115,8 @@ if __name__ == "__main__":
     
     root_node = Node(None,root_board,1)
     node = root_node
-    minmax = MinMax(root_node)
-    minmax.max_move(node)
+    minimax = MiniMax(root_node)
+    minimax.maximizer(node)
     print("Computer Move: "+str(node.best_move[0])+","+str(node.best_move[1]))
     node.best_child.board.show()
     node = node.best_child
@@ -129,11 +129,12 @@ if __name__ == "__main__":
         except:
             continue
         
-        node = minmax.get_state(state)
+        node = minimax.get_state(state)
         node.board.show()
         
         print("Computer Move: "+str(node.best_move[0])+","+str(node.best_move[1]))
         node.best_child.board.show()
         
         node = node.best_child
+    
     
